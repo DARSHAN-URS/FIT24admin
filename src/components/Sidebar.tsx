@@ -10,6 +10,7 @@ const Sidebar = ({ activeTab, setActiveTab }: { activeTab: string, setActiveTab:
     { id: 'challenges', label: 'Challenges', icon: Activity },
     { id: 'referrals', label: 'Referrals', icon: MessageSquare },
     { id: 'feedback', label: 'Feedback', icon: MessageSquare },
+    { id: 'logs', label: 'Activity Logs', icon: Clock },
     { id: 'settings', label: 'Settings', icon: LogOut },
   ];
 

@@ -58,10 +58,13 @@ function App() {
   const [challenges, setChallenges] = useState<any[]>([]);
   const [referrals, setReferrals] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+  const [logs, setLogs] = useState<any[]>([]);
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [config, setConfig] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [broadcastMsg, setBroadcastMsg] = useState('');
+  const [bulkPoints, setBulkPoints] = useState(0);
 
   useEffect(() => {
     fetchData();
@@ -92,6 +95,9 @@ function App() {
             const res = await fetch(`${API_BASE}/config`);
             const data = await res.json();
             setConfig(data.find((c:any) => c.key === 'spin_wheel')?.value || null);
+        } else if (activeTab === 'logs') {
+            const res = await fetch(`${API_BASE}/logs`);
+            setLogs(await res.json());
         }
     } catch (e) {
         console.error("Fetch error, using mock data", e);
@@ -195,6 +201,24 @@ function App() {
         });
         alert("Broadcast sent!");
         setBroadcastMsg('');
+    } catch (e) { console.error(e); }
+  };
+
+  const handleBulkAction = async (type: 'points' | 'message') => {
+    if (selectedUsers.length === 0) return;
+    try {
+        await fetch(`${API_BASE}/users/bulk`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                user_ids: selectedUsers,
+                points: type === 'points' ? bulkPoints : undefined,
+                message: type === 'message' ? broadcastMsg : undefined
+            })
+        });
+        alert("Bulk action completed!");
+        setSelectedUsers([]);
+        fetchData();
     } catch (e) { console.error(e); }
   };
 
@@ -407,13 +431,42 @@ function App() {
 
         {activeTab === 'users' && (
           <div className="users-view animate-fade">
+            {selectedUsers.length > 0 && (
+                <div className="bulk-bar glass animate-slide-up">
+                    <span>{selectedUsers.length} users selected</span>
+                    <div className="bulk-actions">
+                        <input type="number" placeholder="Add Points" onChange={(e) => setBulkPoints(parseInt(e.target.value))} />
+                        <button className="btn-check" onClick={() => handleBulkAction('points')}>Give Points</button>
+                        <input type="text" placeholder="Direct Message" onChange={(e) => setBroadcastMsg(e.target.value)} />
+                        <button className="btn-outline" onClick={() => handleBulkAction('message')}>Send Message</button>
+                    </div>
+                </div>
+            )}
             <div className="chart-container glass full-width">
               <div className="chart-header"><h4>User Directory</h4></div>
               <table className="data-table">
-                <thead><tr><th>User</th><th>Status</th><th>Activity</th><th>Points</th><th>Action</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th>
+                            <input 
+                                type="checkbox" 
+                                onChange={(e) => setSelectedUsers(e.target.checked ? users.map(u => u.id) : [])}
+                                checked={selectedUsers.length === users.length}
+                            />
+                        </th>
+                        <th>User</th><th>Status</th><th>Activity</th><th>Points</th><th>Action</th>
+                    </tr>
+                </thead>
                 <tbody>
                   {users.map((user, i) => (
                     <tr key={i}>
+                      <td>
+                        <input 
+                            type="checkbox" 
+                            checked={selectedUsers.includes(user.id)}
+                            onChange={(e) => setSelectedUsers(prev => e.target.checked ? [...prev, user.id] : prev.filter(id => id !== user.id))}
+                        />
+                      </td>
                       <td><div className="table-user"><div className="avatar-small">{user.name ? user.name[0] : 'U'}</div><div><p className="t-name">{user.name || 'Anonymous'}</p><p className="t-email">{user.email || user.phone}</p></div></div></td>
                       <td><span className="badge active">Active</span></td>
                       <td>High</td>
@@ -432,6 +485,26 @@ function App() {
               </table>
             </div>
           </div>
+        )}
+
+        {activeTab === 'logs' && (
+            <div className="logs-view animate-fade">
+                <div className="chart-container glass full-width">
+                    <div className="chart-header">
+                        <h4>Admin Activity Audit Trail</h4>
+                    </div>
+                    <div className="logs-list">
+                        {logs.map((log, i) => (
+                            <div key={i} className="log-item glass">
+                                <div className="log-time">{new Date(log.created_at).toLocaleString()}</div>
+                                <div className="log-action"><b>{log.action}</b></div>
+                                <div className="log-target">{log.target}</div>
+                                <div className="log-details">{JSON.stringify(log.details)}</div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
         )}
 
         {activeTab === 'settings' && (
