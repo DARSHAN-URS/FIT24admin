@@ -44,7 +44,7 @@ ChartJS.register(
 );
 
 // Mock or real API URL
-const API_BASE = import.meta.env.VITE_API_BASE || 'https://fit24bc-production.up.railway.app/admin';
+const API_BASE = import.meta.env.VITE_API_BASE || 'https://api.fit24.global/api/v1/admin';
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
