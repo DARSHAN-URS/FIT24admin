@@ -68,31 +68,29 @@ function App() {
 
   const fetchData = async () => {
     try {
+        const fetchJson = async (url: string) => {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return await res.json();
+        };
+
         if (activeTab === 'categories') {
-            const res = await fetch(`${API_BASE}/categories`);
-            setCategories(await res.json());
+            setCategories(await fetchJson(`${API_BASE}/categories`));
         } else if (activeTab === 'tutorials') {
-            const res = await fetch(`${API_BASE}/tutorials`);
-            setTutorials(await res.json());
+            setTutorials(await fetchJson(`${API_BASE}/tutorials`));
         } else if (activeTab === 'feedback') {
-            const res = await fetch(`${API_BASE}/feedback`);
-            setFeedback(await res.json());
+            setFeedback(await fetchJson(`${API_BASE}/feedback`));
         } else if (activeTab === 'challenges') {
-            const res = await fetch(`${API_BASE}/challenges`);
-            setChallenges(await res.json());
+            setChallenges(await fetchJson(`${API_BASE}/challenges`));
         } else if (activeTab === 'referrals') {
-            const res = await fetch(`${API_BASE}/referrals`);
-            setReferrals(await res.json());
+            setReferrals(await fetchJson(`${API_BASE}/referrals`));
         } else if (activeTab === 'users') {
-            const res = await fetch(`${API_BASE}/users${searchTerm ? `?search=${searchTerm}` : ''}`);
-            setUsers(await res.json());
+            setUsers(await fetchJson(`${API_BASE}/users${searchTerm ? `?search=${searchTerm}` : ''}`));
         } else if (activeTab === 'settings') {
-            const res = await fetch(`${API_BASE}/config`);
-            const data = await res.json();
-            setConfig(data.find((c:any) => c.key === 'spin_wheel')?.value || null);
+            const data = await fetchJson(`${API_BASE}/config`);
+            setConfig(Array.isArray(data) ? data.find((c:any) => c.key === 'spin_wheel')?.value || null : null);
         } else if (activeTab === 'logs') {
-            const res = await fetch(`${API_BASE}/logs`);
-            setLogs(await res.json());
+            setLogs(await fetchJson(`${API_BASE}/logs`));
         }
     } catch (e) {
         console.error("Fetch error, using mock data", e);
