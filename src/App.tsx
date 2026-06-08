@@ -57,6 +57,7 @@ function App() {
   const [logs, setLogs] = useState<any[]>([]);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [config, setConfig] = useState<any>(null);
+  const [dashboardData, setDashboardData] = useState<any>(null);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [broadcastMsg, setBroadcastMsg] = useState('');
@@ -74,7 +75,9 @@ function App() {
             return await res.json();
         };
 
-        if (activeTab === 'categories') {
+        if (activeTab === 'dashboard') {
+            setDashboardData(await fetchJson(`${API_BASE}/dashboard`));
+        } else if (activeTab === 'categories') {
             setCategories(await fetchJson(`${API_BASE}/categories`));
         } else if (activeTab === 'tutorials') {
             setTutorials(await fetchJson(`${API_BASE}/tutorials`));
@@ -95,6 +98,14 @@ function App() {
     } catch (e) {
         console.error("Fetch error, using mock data", e);
         // Fallback to mock data if backend not running
+        if (activeTab === 'dashboard') setDashboardData({
+            total_users: 12450,
+            daily_active: 3820,
+            points_earned: 8400000,
+            line_labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            line_data: [65, 78, 62, 85, 92, 110, 105],
+            bar_data: [450, 620, 310, 150]
+        });
         if (activeTab === 'categories') setCategories([
             { id: '1', name: 'Walking', icon_name: 'directions_walk', is_active: true },
             { id: '2', name: 'Running', icon_name: 'directions_run', is_active: true },
@@ -136,17 +147,16 @@ function App() {
   };
 
   const stats = [
-    { label: 'Total Users', value: '12,450', change: '+12%', icon: Users, color: 'var(--cyan)' },
-    { label: 'Daily Active', value: '3,820', change: '+8%', icon: TrendingUp, color: 'var(--green)' },
-    { label: 'App Downloads', value: '45.2K', change: '+24%', icon: Download, color: 'var(--purple)' },
-    { label: 'Points Earned', value: '8.4M', change: '+15%', icon: CheckCircle, color: 'var(--amber)' },
+    { label: 'Total Users', value: dashboardData?.total_users?.toLocaleString() || '0', change: '', icon: Users, color: 'var(--cyan)' },
+    { label: 'Daily Active', value: dashboardData?.daily_active?.toLocaleString() || '0', change: '', icon: TrendingUp, color: 'var(--green)' },
+    { label: 'Points Earned', value: dashboardData?.points_earned?.toLocaleString() || '0', change: '', icon: CheckCircle, color: 'var(--amber)' },
   ];
 
   const lineData = {
-    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    labels: dashboardData?.line_labels || ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
     datasets: [{
       fill: true, label: 'User Activity',
-      data: [65, 78, 62, 85, 92, 110, 105],
+      data: dashboardData?.line_data || [0, 0, 0, 0, 0, 0, 0],
       borderColor: '#2ecc71', backgroundColor: 'rgba(46, 204, 113, 0.1)', tension: 0.4,
     }],
   };
@@ -155,7 +165,7 @@ function App() {
     labels: ['Walking', 'Running', 'Cycling', 'Others'],
     datasets: [{
       label: 'Category Popularity',
-      data: [450, 620, 310, 150],
+      data: dashboardData?.bar_data || [0, 0, 0, 0],
       backgroundColor: ['rgba(0, 229, 255, 0.6)', 'rgba(46, 204, 113, 0.6)', 'rgba(255, 0, 127, 0.6)', 'rgba(176, 38, 255, 0.6)'],
       borderRadius: 8,
     }],
