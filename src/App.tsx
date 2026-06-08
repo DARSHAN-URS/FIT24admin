@@ -1,21 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import { 
   Users, 
   TrendingUp, 
   Download, 
   CheckCircle, 
-  Clock, 
-  ArrowUpRight,
   MoreVertical,
   Plus,
   Trash2,
   Play,
   Check,
   X,
-  Settings,
   Bell,
-  Gift,
   Search,
   Save,
   Trophy
@@ -48,7 +44,7 @@ ChartJS.register(
 );
 
 // Mock or real API URL
-const API_BASE = 'https://fit24bc-production.up.railway.app/admin';
+const API_BASE = import.meta.env.VITE_API_BASE || 'https://fit24bc-production.up.railway.app/admin';
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -61,7 +57,7 @@ function App() {
   const [logs, setLogs] = useState<any[]>([]);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [config, setConfig] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(false);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [broadcastMsg, setBroadcastMsg] = useState('');
   const [bulkPoints, setBulkPoints] = useState(0);
@@ -71,7 +67,6 @@ function App() {
   }, [activeTab]);
 
   const fetchData = async () => {
-    setIsLoading(true);
     try {
         if (activeTab === 'categories') {
             const res = await fetch(`${API_BASE}/categories`);
@@ -135,7 +130,6 @@ function App() {
           cooldown_hours: 24
         });
     }
-    setIsLoading(false);
   };
 
   const toggleApproval = async (id: string, current: boolean) => {
@@ -328,9 +322,6 @@ function App() {
                         ))}
                     </div>
                 </div>
-            </div>
-        )}
-
             </div>
         )}
 

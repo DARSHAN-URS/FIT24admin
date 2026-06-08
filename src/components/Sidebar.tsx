@@ -1,5 +1,5 @@
-import React from 'react';
-import { LayoutDashboard, Users, Grid, PlayCircle, MessageSquare, LogOut, Activity } from 'lucide-react';
+
+import { LayoutDashboard, Users, Grid, PlayCircle, MessageSquare, LogOut, Activity, Clock } from 'lucide-react';
 
 const Sidebar = ({ activeTab, setActiveTab }: { activeTab: string, setActiveTab: (tab: string) => void }) => {
   const menuItems = [
