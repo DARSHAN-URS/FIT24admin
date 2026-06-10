@@ -58,6 +58,11 @@ function App() {
   const [config, setConfig] = useState<any>(null);
   const [dashboardData, setDashboardData] = useState<any>(null);
 
+  // Modal State
+  const [showModal, setShowModal] = useState(false);
+  const [modalData, setModalData] = useState<any>({});
+
+
   const [searchTerm, setSearchTerm] = useState('');
   const [broadcastMsg, setBroadcastMsg] = useState('');
   const [bulkPoints, setBulkPoints] = useState(0);
@@ -74,20 +79,21 @@ function App() {
             return await res.json();
         };
 
+        const searchParam = searchTerm ? `?search=${searchTerm}` : '';
         if (activeTab === 'dashboard') {
             setDashboardData(await fetchJson(`${API_BASE}/dashboard`));
         } else if (activeTab === 'categories') {
-            setCategories(await fetchJson(`${API_BASE}/categories`));
+            setCategories(await fetchJson(`${API_BASE}/categories${searchParam}`));
         } else if (activeTab === 'tutorials') {
-            setTutorials(await fetchJson(`${API_BASE}/tutorials`));
+            setTutorials(await fetchJson(`${API_BASE}/tutorials${searchParam}`));
         } else if (activeTab === 'feedback') {
-            setFeedback(await fetchJson(`${API_BASE}/feedback`));
+            setFeedback(await fetchJson(`${API_BASE}/feedback${searchParam}`));
         } else if (activeTab === 'challenges') {
-            setChallenges(await fetchJson(`${API_BASE}/challenges`));
+            setChallenges(await fetchJson(`${API_BASE}/challenges${searchParam}`));
         } else if (activeTab === 'referrals') {
             setReferrals(await fetchJson(`${API_BASE}/referrals`));
         } else if (activeTab === 'users') {
-            setUsers(await fetchJson(`${API_BASE}/users${searchTerm ? `?search=${searchTerm}` : ''}`));
+            setUsers(await fetchJson(`${API_BASE}/users${searchParam}`));
         } else if (activeTab === 'settings') {
             const data = await fetchJson(`${API_BASE}/config`);
             setConfig(Array.isArray(data) ? data.find((c:any) => c.key === 'spin_wheel')?.value || null : null);
@@ -141,8 +147,35 @@ function App() {
   };
 
   const toggleApproval = async (id: string, current: boolean) => {
-    setFeedback(prev => prev.map(f => f.id === id ? { ...f, is_approved: !current } : f));
-    // Real API call: fetch(`${API_BASE}/feedback/${id}`, { method: 'PATCH', ... })
+    try {
+        await fetch(`${API_BASE}/feedback/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ is_approved: !current })
+        });
+        setFeedback(prev => prev.map(f => f.id === id ? { ...f, is_approved: !current } : f));
+    } catch (e) { console.error(e); }
+  };
+
+  const handleDelete = async (type: string, id: string) => {
+    if (!window.confirm("Are you sure you want to delete this item?")) return;
+    try {
+        await fetch(`${API_BASE}/${type}/${id}`, { method: 'DELETE' });
+        fetchData();
+    } catch (e) { console.error(e); }
+  };
+
+  const handleSaveModal = async () => {
+    try {
+        await fetch(`${API_BASE}/${activeTab}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(modalData)
+        });
+        setShowModal(false);
+        setModalData({});
+        fetchData();
+    } catch (e) { console.error(e); }
   };
 
   const stats = [
@@ -244,7 +277,7 @@ function App() {
                 onKeyDown={(e) => e.key === 'Enter' && fetchData()}
               />
             </div>
-            <button className="add-btn">
+            <button className="add-btn" onClick={() => setShowModal(true)}>
               <Plus size={20} />
               <span>{activeTab === 'tutorials' ? 'Add Video' : activeTab === 'challenges' ? 'New Challenge' : 'Action'}</span>
             </button>
@@ -285,7 +318,7 @@ function App() {
                 <div className="chart-container glass full-width">
                     <div className="chart-header">
                         <h4>Activity Categories</h4>
-                        <button className="add-small-btn"><Plus size={16} /> New Category</button>
+                        <button className="add-small-btn" onClick={() => setShowModal(true)}><Plus size={16} /> New Category</button>
                     </div>
                     <div className="grid-list">
                         {categories.map(cat => (
@@ -296,7 +329,7 @@ function App() {
                                 <p>{cat.is_active ? 'Active' : 'Inactive'}</p>
                                 <div className="item-actions">
                                     <button className="edit">Edit</button>
-                                    <button className="delete"><Trash2 size={16} /></button>
+                                    <button className="delete" onClick={() => handleDelete('categories', cat.id)}><Trash2 size={16} /></button>
                                 </div>
                             </div>
                         ))}
@@ -322,8 +355,8 @@ function App() {
                                     <p>Engagement: {tut.upvotes} Upvotes | {tut.downvotes} Downvotes</p>
                                 </div>
                                 <div className="tut-actions">
-                                    <button className="btn-outline">Watch</button>
-                                    <button className="btn-danger"><Trash2 size={16} /></button>
+                                    <button className="btn-outline" onClick={() => window.open(tut.video_url, '_blank')}>Watch</button>
+                                    <button className="btn-danger" onClick={() => handleDelete('tutorials', tut.id)}><Trash2 size={16} /></button>
                                 </div>
                             </div>
                         ))}
@@ -361,7 +394,7 @@ function App() {
                                                 <button onClick={() => toggleApproval(f.id, f.is_approved)} className={f.is_approved ? 'btn-x' : 'btn-check'}>
                                                     {f.is_approved ? <X size={16} /> : <Check size={16} />}
                                                 </button>
-                                                <button className="btn-trash"><Trash2 size={16} /></button>
+                                                <button className="btn-trash" onClick={() => handleDelete('feedback', f.id)}><Trash2 size={16} /></button>
                                             </div>
                                         </td>
                                     </tr>
@@ -388,7 +421,7 @@ function App() {
                                 <p className="sub-text">{chal.requirement_value} {chal.requirement_type}</p>
                                 <div className="item-actions">
                                     <button className="edit">Edit</button>
-                                    <button className="delete"><Trash2 size={16} /></button>
+                                    <button className="delete" onClick={() => handleDelete('challenges', chal.id)}><Trash2 size={16} /></button>
                                 </div>
                             </div>
                         ))}
@@ -550,6 +583,39 @@ function App() {
             </div>
         )}
       </main>
+
+      {showModal && (
+        <div className="modal-overlay">
+            <div className="modal-content glass">
+                <h3>Add New {activeTab.slice(0, -1)}</h3>
+                {activeTab === 'categories' && (
+                    <>
+                        <input type="text" placeholder="Category Name" onChange={(e) => setModalData({...modalData, name: e.target.value})} />
+                        <input type="text" placeholder="Icon Name (e.g. directions_run)" onChange={(e) => setModalData({...modalData, icon_name: e.target.value})} />
+                        <label className="checkbox-label"><input type="checkbox" onChange={(e) => setModalData({...modalData, is_active: e.target.checked})} /> Active Category</label>
+                    </>
+                )}
+                {activeTab === 'tutorials' && (
+                    <>
+                        <input type="text" placeholder="Title" onChange={(e) => setModalData({...modalData, title: e.target.value})} />
+                        <input type="text" placeholder="Video URL" onChange={(e) => setModalData({...modalData, video_url: e.target.value})} />
+                    </>
+                )}
+                {activeTab === 'challenges' && (
+                    <>
+                        <input type="text" placeholder="Title" onChange={(e) => setModalData({...modalData, title: e.target.value})} />
+                        <input type="number" placeholder="Reward Coins" onChange={(e) => setModalData({...modalData, reward_coins: parseInt(e.target.value)})} />
+                        <input type="text" placeholder="Requirement Type (e.g. steps, distance)" onChange={(e) => setModalData({...modalData, requirement_type: e.target.value})} />
+                        <input type="number" placeholder="Requirement Value" onChange={(e) => setModalData({...modalData, requirement_value: parseInt(e.target.value)})} />
+                    </>
+                )}
+                <div className="modal-actions">
+                    <button className="btn-outline" onClick={() => setShowModal(false)}>Cancel</button>
+                    <button className="btn-check" onClick={handleSaveModal}>Save</button>
+                </div>
+            </div>
+        </div>
+      )}
     </div>
   );
 }
