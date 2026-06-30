@@ -63,6 +63,11 @@ function App() {
   const [modalData, setModalData] = useState<any>({});
   const [viewingUser, setViewingUser] = useState<any>(null);
 
+  // Auth State
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+
 
   const [searchTerm, setSearchTerm] = useState('');
   const [broadcastMsg, setBroadcastMsg] = useState('');
@@ -256,6 +261,43 @@ function App() {
         fetchData();
     } catch (e) { console.error(e); }
   };
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (username === 'admin' && password === 'admin') {
+      setIsAuthenticated(true);
+    } else {
+      alert('Invalid credentials');
+    }
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="login-container" style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', background: '#0d1113' }}>
+        <form onSubmit={handleLogin} className="glass" style={{ padding: '40px', borderRadius: '24px', display: 'flex', flexDirection: 'column', gap: '20px', width: '300px' }}>
+          <div className="logo-icon" style={{ margin: '0 auto', marginBottom: '10px' }}>
+            <span style={{ fontSize: 24, fontWeight: 'bold', color: 'var(--green)' }}>F24</span>
+          </div>
+          <h2 style={{ textAlign: 'center', color: 'white', margin: 0, marginBottom: '10px' }}>Admin Login</h2>
+          <input 
+            type="text" 
+            placeholder="Username" 
+            value={username} 
+            onChange={e => setUsername(e.target.value)} 
+            style={{ padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white', outline: 'none' }}
+          />
+          <input 
+            type="password" 
+            placeholder="Password" 
+            value={password} 
+            onChange={e => setPassword(e.target.value)} 
+            style={{ padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white', outline: 'none' }}
+          />
+          <button type="submit" style={{ padding: '12px', borderRadius: '12px', background: 'var(--grad-green)', color: 'black', fontWeight: 'bold', border: 'none', cursor: 'pointer', marginTop: '10px' }}>Login</button>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-container">
