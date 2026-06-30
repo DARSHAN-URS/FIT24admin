@@ -61,6 +61,7 @@ function App() {
   // Modal State
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState<any>({});
+  const [viewingUser, setViewingUser] = useState<any>(null);
 
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -509,7 +510,7 @@ function App() {
                             onBlur={(e) => updateUserPoints(user.id, parseInt(e.target.value))}
                         />
                       </td>
-                      <td><button className="action-dots"><MoreVertical size={16} /></button></td>
+                      <td><button className="action-dots" onClick={() => setViewingUser(user)}><MoreVertical size={16} /></button></td>
                     </tr>
                   ))}
                 </tbody>
@@ -583,6 +584,45 @@ function App() {
             </div>
         )}
       </main>
+
+      {viewingUser && (
+        <div className="modal-overlay" onClick={() => setViewingUser(null)}>
+            <div className="modal-content glass" onClick={(e) => e.stopPropagation()}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h3>User Details</h3>
+                    <button onClick={() => setViewingUser(null)} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}><X size={20} /></button>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div style={{ display: 'flex', gap: '16px', alignItems: 'center', marginBottom: '16px' }}>
+                        <div className="avatar" style={{ width: 64, height: 64, fontSize: 24, flexShrink: 0 }}>{viewingUser.name ? viewingUser.name[0] : 'U'}</div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <h4 style={{ fontSize: 20, margin: 0, color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{viewingUser.name || 'Anonymous'}</h4>
+                            <p style={{ color: 'var(--text-dim)', margin: 0, fontSize: 12 }}>ID: {viewingUser.id}</p>
+                        </div>
+                    </div>
+                    <div className="config-item">
+                        <span style={{ width: 80 }}>Email</span>
+                        <input type="text" value={viewingUser.email || 'N/A'} readOnly style={{ pointerEvents: 'none' }} />
+                    </div>
+                    <div className="config-item">
+                        <span style={{ width: 80 }}>Phone</span>
+                        <input type="text" value={viewingUser.phone || 'N/A'} readOnly style={{ pointerEvents: 'none' }} />
+                    </div>
+                    <div className="config-item">
+                        <span style={{ width: 80 }}>Points</span>
+                        <input type="number" value={viewingUser.points || 0} readOnly style={{ pointerEvents: 'none' }} />
+                    </div>
+                    <div className="config-item">
+                        <span style={{ width: 80 }}>Referrals</span>
+                        <input type="number" value={viewingUser.referrals || 0} readOnly style={{ pointerEvents: 'none' }} />
+                    </div>
+                </div>
+                <div className="modal-actions">
+                    <button className="btn-outline" onClick={() => setViewingUser(null)}>Close</button>
+                </div>
+            </div>
+        </div>
+      )}
 
       {showModal && (
         <div className="modal-overlay">
