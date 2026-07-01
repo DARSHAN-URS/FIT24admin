@@ -262,14 +262,28 @@ function App() {
     } catch (e) { console.error(e); }
   };
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (username === 'admin' && password === 'admin') {
-      setIsAuthenticated(true);
-    } else {
-      alert('Invalid credentials');
-    }
-  };
+  const handleLogin = async (e: React.FormEvent) => {
+      e.preventDefault();
+      try {
+        const response = await fetch(`${API_BASE}/admin-login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: username, token: password })
+        });
+        if (!response.ok) {
+          const err = await response.json();
+          alert(err.detail || 'Login failed');
+          return;
+        }
+        const data = await response.json();
+        const token = data.access_token;
+        localStorage.setItem('admin_token', token);
+        setIsAuthenticated(true);
+      } catch (e) {
+        console.error(e);
+        alert('Login error');
+      }
+    };
 
   if (!isAuthenticated) {
     return (
